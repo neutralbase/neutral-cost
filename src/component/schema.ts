@@ -101,5 +101,8 @@ export default defineSchema({
     ),
   )
     .index("by_scope", ["scope"])
-    .index("by_provider", ["providerId"]),
+    .index("by_provider", ["providerId"])
+    .index("by_scope_and_provider", ["scope", "providerId"])
+    .index("by_provider_and_model", ["providerId", "modelId"])
+    .index("by_provider_and_tool", ["providerId", "toolId"]),
 });

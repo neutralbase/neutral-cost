@@ -58,15 +58,9 @@ export const addAICost = actionGeneric({
     // Calculate actual costs using pricing data
     const costs = calculateCosts(args.usage, pricing);
 
-    const markupMultipliers = await ctx.runQuery(
-      api.markup.getMarkupMultipliers,
-    );
-    const markup = getMarkupMultiplier({
+    const markup = await ctx.runQuery(api.markup.getMarkupMultiplier, {
       providerId: args.providerId,
       modelId: args.modelId,
-      providerMarkupMultipliers: markupMultipliers.providerMultipliers,
-      modelMarkupMultipliers: markupMultipliers.modelMarkupMultipliers,
-      toolMarkupMultipliers: markupMultipliers.toolMarkupMultipliers,
     });
 
     // Calculate user costs with 50% markup (all values in USD)

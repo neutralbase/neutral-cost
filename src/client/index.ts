@@ -470,6 +470,45 @@ export class CostComponent {
   }
 
   // ==========================================================================
+  // Markup
+  // ==========================================================================
+
+  /**
+   * Get the markup multiplier for a specific provider/model/tool combination.
+   * Priority: model-specific > tool-specific > provider-specific > 0
+   *
+   * @param ctx - A Convex query context.
+   * @param args - The provider, model, and tool identifiers.
+   * @returns The applicable markup multiplier.
+   */
+  async getMarkupMultiplier(
+    ctx: CtxWith<"runQuery">,
+    args: {
+      providerId: string;
+      modelId?: string;
+      toolId?: string;
+    },
+  ) {
+    return ctx.runQuery(this.component.markup.getMarkupMultiplier, args);
+  }
+
+  /**
+   * Get a markup multiplier by its ID.
+   *
+   * @param ctx - A Convex query context.
+   * @param markupMultiplierId - The markup multiplier document ID.
+   * @returns The markup multiplier document or null if not found.
+   */
+  async getMarkupMultiplierById(
+    ctx: CtxWith<"runQuery">,
+    markupMultiplierId: string,
+  ) {
+    return ctx.runQuery(this.component.markup.getMarkupMultiplierById, {
+      markupMultiplierId,
+    });
+  }
+
+  // ==========================================================================
   // Client API
   // ==========================================================================
 
@@ -783,6 +822,30 @@ export class CostComponent {
           return ctx.runQuery(this.component.pricing.getToolPricingByProvider, {
             providerId: args.providerId,
           });
+        },
+      }),
+
+      // Markup Queries
+      getMarkupMultiplier: queryGeneric({
+        args: {
+          providerId: v.string(),
+          modelId: v.optional(v.string()),
+          toolId: v.optional(v.string()),
+        },
+        handler: async (ctx, args) => {
+          return ctx.runQuery(this.component.markup.getMarkupMultiplier, args);
+        },
+      }),
+
+      getMarkupMultiplierById: queryGeneric({
+        args: {
+          markupMultiplierId: v.id("markupMultiplier"),
+        },
+        handler: async (ctx, args) => {
+          return ctx.runQuery(
+            this.component.markup.getMarkupMultiplierById,
+            args,
+          );
         },
       }),
     };

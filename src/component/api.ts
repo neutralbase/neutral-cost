@@ -13,6 +13,7 @@ import {
   upsertModelMarkup,
   upsertToolMarkup,
   deleteMarkup,
+  getMarkupMultiplierById,
 } from "./markup.js";
 import {
   getAllPricing,
@@ -104,6 +105,7 @@ export function createMarkupApi() {
   return {
     getMarkupMultipliers,
     getMarkupMultiplier,
+    getMarkupMultiplierById,
     upsertProviderMarkup,
     upsertModelMarkup,
     upsertToolMarkup,

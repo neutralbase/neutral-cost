@@ -90,26 +90,15 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       getMarkupMultiplier: FunctionReference<
         "query",
         "internal",
-        {
-          modelId?: string;
-          providerId: string;
-          scope: "provider" | "model" | "tool";
-          toolId?: string;
-        },
-        | { markupMultiplier: number; providerId: string; scope: "provider" }
-        | {
-            markupMultiplier: number;
-            modelId: string;
-            providerId: string;
-            scope: "model";
-          }
-        | {
-            markupMultiplier: number;
-            providerId: string;
-            scope: "tool";
-            toolId: string;
-          }
-        | null,
+        { modelId?: string; providerId: string; toolId?: string },
+        number,
+        Name
+      >;
+      getMarkupMultiplierById: FunctionReference<
+        "query",
+        "internal",
+        { markupMultiplierId: string },
+        any,
         Name
       >;
       getMarkupMultipliers: FunctionReference<

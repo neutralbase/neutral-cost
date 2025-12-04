@@ -65,15 +65,9 @@ export const addToolCost = actionGeneric({
     // Calculate cost based on pricing source
     let calculatedResult: CalculatedToolCost;
 
-    const markupMultipliers = await ctx.runQuery(
-      api.markup.getMarkupMultipliers,
-    );
-    const markup = getMarkupMultiplier({
+    const markup = await ctx.runQuery(api.markup.getMarkupMultiplier, {
       providerId: args.providerId,
       toolId: args.toolId,
-      providerMarkupMultipliers: markupMultipliers.providerMultipliers,
-      modelMarkupMultipliers: markupMultipliers.modelMarkupMultipliers,
-      toolMarkupMultipliers: markupMultipliers.toolMarkupMultipliers,
     });
 
     const markupMultiplier = args.markupMultiplier ?? markup;
