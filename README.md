@@ -60,10 +60,10 @@ const costs = new CostComponent(components.costComponent, {
     { providerId: "openai", multiplier: 1.5 }, // 50% markup on OpenAI
   ],
   modelMarkupMultiplier: [
-    { modelId: "gpt-4", multiplier: 2.0 }, // 100% markup on GPT-4
+    { modelId: "gpt-4", providerId: "openai", multiplier: 2.0 }, // 100% markup on GPT-4
   ],
   toolMarkupMultiplier: [
-    { toolId: "web-search", multiplier: 1.25 }, // 25% markup on web search
+    { toolId: "web-search", providerId: "tavily", multiplier: 1.25 }, // 25% markup on web search
   ],
 });
 ```

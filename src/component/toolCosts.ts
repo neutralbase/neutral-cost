@@ -59,9 +59,6 @@ export const addToolCost = actionGeneric({
     });
 
     if (!pricing) {
-      console.warn(
-        `No pricing found for provider ${args.providerId}${args.toolId ? ` model ${args.toolId}` : ""}`,
-      );
       throw new Error("Pricing not found for tool");
     }
 

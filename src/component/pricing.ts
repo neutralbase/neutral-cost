@@ -57,16 +57,11 @@ export const updatePricingData = actionGeneric({
         pricingData: pricingUpdates,
       });
 
-      console.log(
-        `Pricing update complete: ${result.insertCount} inserted, ${result.updateCount} updated, ${result.deleteCount} deleted`,
-      );
-
       return {
         updatedModels: pricingUpdates.length,
         ...result,
       };
     } catch (error) {
-      console.error("Failed to update pricing data:", error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       throw new Error(`Failed to update pricing data: ${errorMessage}`);

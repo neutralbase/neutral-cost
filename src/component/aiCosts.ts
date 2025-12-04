@@ -52,7 +52,6 @@ export const addAICost = actionGeneric({
     });
 
     if (!pricing) {
-      console.warn(`No pricing found for modelId: ${args.modelId}`);
       throw new Error("Pricing not found for model");
     }
 
