@@ -5,7 +5,7 @@ import { useUIMessages, useSmoothText } from "@convex-dev/agent/react";
 import type { UIMessage } from "@convex-dev/agent";
 import { api } from "../../convex/_generated/api";
 
-import { DemoUser } from "../data/demo-users";
+import type { DemoUser } from "../data/demo-users";
 import {
   Conversation,
   ConversationContent,
@@ -22,7 +22,7 @@ import {
   PromptInput,
   PromptInputBody,
   PromptInputFooter,
-  PromptInputMessage,
+  type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
 } from "./ai-elements/prompt-input";
@@ -120,7 +120,7 @@ export function ChatPanel({ user, threadId: externalThreadId, onThreadChange }: 
     };
 
     setThreadId(null);
-    initThread();
+    void initThread();
   }, [user.id, createThread, externalThreadId, setThreadId]);
 
   const scrollToBottom = useCallback(() => {
@@ -156,11 +156,11 @@ export function ChatPanel({ user, threadId: externalThreadId, onThreadChange }: 
   );
 
   const handleSubmit = (message: PromptInputMessage) => {
-    handleSendMessage(message.text);
+    void handleSendMessage(message.text);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    handleSendMessage(suggestion);
+    void handleSendMessage(suggestion);
   };
 
   const handleNewThread = async () => {

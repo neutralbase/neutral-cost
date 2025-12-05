@@ -1,4 +1,4 @@
-import { DemoUser } from "../data/demo-users";
+import type { DemoUser } from "../data/demo-users";
 import { cn } from "../lib/utils";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";

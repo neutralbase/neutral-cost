@@ -2,12 +2,6 @@ import * as React from "react";
 
 import { cn } from "../../lib/utils";
 
-type ModelOption = {
-  id: string;
-  name: string;
-  provider?: string;
-};
-
 type ModelSelectorContextValue = {
   open: boolean;
   setOpen: (value: boolean) => void;
@@ -37,11 +31,11 @@ export function ModelSelector({
 }
 
 export function ModelSelectorTrigger({
-  asChild,
+  asChild: _asChild,
   children,
 }: {
   asChild?: boolean;
-  children: React.ReactElement;
+  children: React.ReactElement<{ onClick?: () => void; "aria-expanded"?: boolean }>;
 }) {
   const ctx = React.useContext(ModelSelectorContext);
   if (!ctx) return children;
@@ -96,7 +90,7 @@ export function ModelSelectorGroup({
 }
 
 export function ModelSelectorItem({
-  value,
+  value: _value,
   onSelect,
   children,
 }: {

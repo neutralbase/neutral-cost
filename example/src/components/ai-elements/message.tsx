@@ -72,7 +72,7 @@ MessageResponse.displayName = "MessageResponse";
 export function MessageBranch({
   children,
   className,
-  defaultBranch,
+  defaultBranch: _defaultBranch,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { defaultBranch?: number }) {
   return (
@@ -97,7 +97,7 @@ export function MessageBranchContent({
 export function MessageBranchSelector({
   children,
   className,
-  from,
+  from: _from,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { from?: "user" | "assistant" }) {
   return (

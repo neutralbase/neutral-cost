@@ -90,7 +90,7 @@ export const getTransactionsByUser = query({
 
     // Transform AI costs to transaction format
     // Include both raw cost and user cost (with markup)
-    const aiTransactions = aiCosts.map((cost: any) => ({
+    const aiTransactions = aiCosts.map((cost: { _id: string; userId?: string; cost?: { totalCost?: number }; costForUser?: { totalCost?: number }; threadId?: string; _creationTime: number }) => ({
       _id: cost._id,
       userId: cost.userId ?? userId,
       amount: -(cost.cost?.totalCost ?? 0),
@@ -103,7 +103,7 @@ export const getTransactionsByUser = query({
 
     // Transform tool costs to transaction format
     // Tool costs use 'amount' field instead of 'totalCost'
-    const toolTransactions = toolCosts.map((cost: any) => ({
+    const toolTransactions = toolCosts.map((cost: { _id: string; userId?: string; cost?: { amount?: number }; costForUser?: { amount?: number }; toolId?: string; threadId?: string; _creationTime: number }) => ({
       _id: cost._id,
       userId: cost.userId ?? userId,
       amount: -(cost.cost?.amount ?? 0),

@@ -149,6 +149,7 @@ export const getPricing = queryGeneric({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("aiPricing")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_model_id_and_provider", (q: any) =>
         q.eq("modelId", args.modelId).eq("providerId", args.providerId),
       )
@@ -181,6 +182,7 @@ export const getPricingByProvider = queryGeneric({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("aiPricing")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_provider", (q: any) => q.eq("providerId", args.providerId))
       .collect();
   },
@@ -236,6 +238,7 @@ export const getToolPricing = queryGeneric({
     if (args.toolId) {
       const exactMatch = await ctx.db
         .query("toolsPricing")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .withIndex("by_provider_and_tool", (q: any) =>
           q.eq("providerId", args.providerId).eq("toolId", args.toolId),
         )
@@ -249,6 +252,7 @@ export const getToolPricing = queryGeneric({
     // 2. Try provider-only match (for default/base pricing)
     const providerMatch = await ctx.db
       .query("toolsPricing")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_provider_and_tool", (q: any) =>
         q.eq("providerId", args.providerId).eq("toolId", undefined),
       )
@@ -261,6 +265,7 @@ export const getToolPricing = queryGeneric({
     // 3. Fallback: try aiPricing with providerId as modelId
     const aiPricingResult = await ctx.db
       .query("aiPricing")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_model_id", (q: any) => q.eq("modelId", args.providerId))
       .first();
 
@@ -293,6 +298,7 @@ export const getToolPricingByProvider = queryGeneric({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("toolsPricing")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_provider", (q: any) => q.eq("providerId", args.providerId))
       .collect();
   },
@@ -327,12 +333,14 @@ export const upsertToolPricing = mutationGeneric({
     const existing = args.modelId
       ? await ctx.db
           .query("toolsPricing")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .withIndex("by_provider_and_tool", (q: any) =>
             q.eq("providerId", args.providerId).eq("modelId", args.modelId),
           )
           .first()
       : await ctx.db
           .query("toolsPricing")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .withIndex("by_provider_and_tool", (q: any) =>
             q.eq("providerId", args.providerId).eq("modelId", undefined),
           )
@@ -380,12 +388,14 @@ export const deleteToolPricing = mutationGeneric({
     const existing = args.modelId
       ? await ctx.db
           .query("toolsPricing")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .withIndex("by_provider_and_tool", (q: any) =>
             q.eq("providerId", args.providerId).eq("modelId", args.modelId),
           )
           .first()
       : await ctx.db
           .query("toolsPricing")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .withIndex("by_provider_and_tool", (q: any) =>
             q.eq("providerId", args.providerId).eq("modelId", undefined),
           )

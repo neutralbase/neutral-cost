@@ -2,21 +2,13 @@ import type {
   ApiFromModules,
   GenericActionCtx,
   GenericDataModel,
-  GenericMutationCtx,
   GenericQueryCtx,
 } from "convex/server";
 import { actionGeneric, queryGeneric } from "convex/server";
 import { v } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component.js";
-import type {
-  Usage,
-  ToolUsage,
-  Cost,
-  CostForUser,
-  ToolCost,
-  ToolCostForUser,
-} from "../validators.js";
-import { vUsage, vToolUsage, vAddAICost, vAddToolCost } from "../validators.js";
+import type { Usage, ToolUsage } from "../validators.js";
+import { vAddAICost, vAddToolCost } from "../validators.js";
 import type { AddAICostResult } from "../component/aiCosts.js";
 import type { AddToolCostResult } from "../component/toolCosts.js";
 import type {

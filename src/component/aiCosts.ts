@@ -13,11 +13,7 @@ import {
   type Cost,
   type CostForUser,
 } from "../validators.js";
-import {
-  calculateCosts,
-  calculateUserCosts,
-  getMarkupMultiplier,
-} from "../shared.js";
+import { calculateCosts, calculateUserCosts } from "../shared.js";
 import type { Id } from "./_generated/dataModel.js";
 
 export type AddAICostResult = {
@@ -154,6 +150,7 @@ export const getAICostsByThread = queryGeneric({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerAIRequest")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_thread", (q: any) => q.eq("threadId", args.threadId))
       .collect();
   },
@@ -172,6 +169,7 @@ export const getAICostsByUser = queryGeneric({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerAIRequest")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .collect();
   },
@@ -194,14 +192,17 @@ export const getTotalAICostsByUser = queryGeneric({
   handler: async (ctx, args) => {
     const costs = await ctx.db
       .query("costPerAIRequest")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .collect();
 
     const totalAmount = costs.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, c: any) => sum + c.cost.totalCost,
       0,
     );
     const totalUserAmount = costs.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, c: any) => sum + c.costForUser.totalCost,
       0,
     );
@@ -227,14 +228,17 @@ export const getTotalAICostsByThread = queryGeneric({
   handler: async (ctx, args) => {
     const costs = await ctx.db
       .query("costPerAIRequest")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_thread", (q: any) => q.eq("threadId", args.threadId))
       .collect();
 
     const totalAmount = costs.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, c: any) => sum + c.cost.totalCost,
       0,
     );
     const totalUserAmount = costs.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, c: any) => sum + c.costForUser.totalCost,
       0,
     );
@@ -260,6 +264,7 @@ export const getAICostByMessageId = queryGeneric({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerAIRequest")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_message", (q: any) => q.eq("messageId", args.messageId))
       .first();
   },

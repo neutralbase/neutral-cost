@@ -76,6 +76,7 @@ export const getMarkupMultiplier = queryGeneric({
     if (args.modelId) {
       const modelMatch = await ctx.db
         .query("markupMultiplier")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .withIndex("by_provider_and_model", (q: any) =>
           q.eq("providerId", args.providerId).eq("modelId", args.modelId),
         )
@@ -89,6 +90,7 @@ export const getMarkupMultiplier = queryGeneric({
     if (args.toolId) {
       const toolMatch = await ctx.db
         .query("markupMultiplier")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .withIndex("by_provider_and_tool", (q: any) =>
           q.eq("providerId", args.providerId).eq("toolId", args.toolId),
         )
@@ -101,6 +103,7 @@ export const getMarkupMultiplier = queryGeneric({
     // Fall back to provider-level markup
     const providerMatch = await ctx.db
       .query("markupMultiplier")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_scope_and_provider", (q: any) =>
         q.eq("scope", "provider").eq("providerId", args.providerId),
       )
