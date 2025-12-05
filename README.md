@@ -54,7 +54,7 @@ export default app;
 import { components } from "./_generated/api";
 import { CostComponent } from "neutral-cost";
 
-const costs = new CostComponent(components.costComponent, {
+const costs = new CostComponent(components.neutralCost, {
   // Optional: Configure markup multipliers per provider, model, or tool
   providerMarkupMultiplier: [
     { providerId: "openai", multiplier: 1.5 }, // 50% markup on OpenAI
