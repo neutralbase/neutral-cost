@@ -22,7 +22,8 @@ export default defineSchema({
     usage: vUsage,
   })
     .index("by_user", ["userId"])
-    .index("by_thread", ["threadId"]),
+    .index("by_thread", ["threadId"])
+    .index("by_message", ["messageId"]),
 
   /** Stores calculated costs for each tool usage */
   costPerTools: defineTable({

@@ -216,6 +216,19 @@ export class CostComponent {
   }
 
   /**
+   * Get AI cost for a specific message.
+   *
+   * @param ctx - A Convex query context.
+   * @param messageId - The message identifier.
+   * @returns The AI cost record for the message or null if not found.
+   */
+  async getAICostByMessageId(ctx: CtxWith<"runQuery">, messageId: string) {
+    return ctx.runQuery(this.component.aiCosts.getAICostByMessageId, {
+      messageId,
+    });
+  }
+
+  /**
    * Get aggregated AI costs for a user.
    *
    * @param ctx - A Convex query context.
@@ -527,6 +540,7 @@ export class CostComponent {
    * export const {
    *   getAICostsByThread,
    *   getAICostsByUser,
+   *   getAICostByMessageId,
    *   getTotalAICostsByUser,
    *   getTotalAICostsByThread,
    *   getToolCostsByThread,
@@ -544,6 +558,7 @@ export class CostComponent {
       ctx: GenericQueryCtx<DataModel>,
       threadId?: string,
       userId?: string,
+      messageId?: string,
     ) => void | Promise<void>;
     checkToolCostAccess?: (
       ctx: GenericQueryCtx<DataModel>,
@@ -669,7 +684,12 @@ export class CostComponent {
         args: { threadId: v.string() },
         handler: async (ctx, args) => {
           if (opts?.checkAICostAccess) {
-            await opts.checkAICostAccess(ctx, args.threadId, undefined);
+            await opts.checkAICostAccess(
+              ctx,
+              args.threadId,
+              undefined,
+              undefined,
+            );
           }
           return ctx.runQuery(this.component.aiCosts.getAICostsByThread, {
             threadId: args.threadId,
@@ -681,10 +701,32 @@ export class CostComponent {
         args: { userId: v.string() },
         handler: async (ctx, args) => {
           if (opts?.checkAICostAccess) {
-            await opts.checkAICostAccess(ctx, undefined, args.userId);
+            await opts.checkAICostAccess(
+              ctx,
+              undefined,
+              args.userId,
+              undefined,
+            );
           }
           return ctx.runQuery(this.component.aiCosts.getAICostsByUser, {
             userId: args.userId,
+          });
+        },
+      }),
+
+      getAICostByMessageId: queryGeneric({
+        args: { messageId: v.string() },
+        handler: async (ctx, args) => {
+          if (opts?.checkAICostAccess) {
+            await opts.checkAICostAccess(
+              ctx,
+              undefined,
+              undefined,
+              args.messageId,
+            );
+          }
+          return ctx.runQuery(this.component.aiCosts.getAICostByMessageId, {
+            messageId: args.messageId,
           });
         },
       }),
@@ -693,7 +735,12 @@ export class CostComponent {
         args: { userId: v.string() },
         handler: async (ctx, args) => {
           if (opts?.checkAICostAccess) {
-            await opts.checkAICostAccess(ctx, undefined, args.userId);
+            await opts.checkAICostAccess(
+              ctx,
+              undefined,
+              args.userId,
+              undefined,
+            );
           }
           return ctx.runQuery(this.component.aiCosts.getTotalAICostsByUser, {
             userId: args.userId,
@@ -705,7 +752,12 @@ export class CostComponent {
         args: { threadId: v.string() },
         handler: async (ctx, args) => {
           if (opts?.checkAICostAccess) {
-            await opts.checkAICostAccess(ctx, args.threadId, undefined);
+            await opts.checkAICostAccess(
+              ctx,
+              args.threadId,
+              undefined,
+              undefined,
+            );
           }
           return ctx.runQuery(this.component.aiCosts.getTotalAICostsByThread, {
             threadId: args.threadId,

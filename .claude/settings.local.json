@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api:*)",
+      "Bash(npm run dev:frontend:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite build)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

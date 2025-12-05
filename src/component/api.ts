@@ -5,6 +5,7 @@ import {
   getAICostsByUser,
   getTotalAICostsByUser,
   getTotalAICostsByThread,
+  getAICostByMessageId,
 } from "./aiCosts.js";
 import {
   getMarkupMultipliers,
@@ -54,6 +55,7 @@ export function createAICostsApi() {
     getAICostsByUser,
     getTotalAICostsByUser,
     getTotalAICostsByThread,
+    getAICostByMessageId,
   };
 }
 

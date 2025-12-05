@@ -246,3 +246,21 @@ export const getTotalAICostsByThread = queryGeneric({
     };
   },
 });
+
+/**
+ * Get AI cost for a specific message.
+ *
+ * @param messageId - Message identifier
+ * @returns AI cost record for the message, or null if not found
+ */
+export const getAICostByMessageId = queryGeneric({
+  args: {
+    messageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("costPerAIRequest")
+      .withIndex("by_message", (q: any) => q.eq("messageId", args.messageId))
+      .first();
+  },
+});

@@ -40,10 +40,10 @@ Create a `convex.config.ts` file in your app's `convex/` folder and install the 
 ```ts
 // convex/convex.config.ts
 import { defineApp } from "convex/server";
-import costComponent from "neutral-cost/convex.config";
+import neutralCost from "neutral-cost/convex.config";
 
 const app = defineApp();
-app.use(costComponent);
+app.use(neutralCost);
 
 export default app;
 ```
@@ -67,6 +67,8 @@ const costs = new CostComponent(components.costComponent, {
   ],
 });
 ```
+
+> **Note:** You can also configure markup multipliers in the Convex database. If a markup is defined in the database, it will take precedence and the configuration here will be ignored.
 
 ### Track AI Costs
 
@@ -131,6 +133,13 @@ export const {
   addAICost,
   addToolCost,
   updatePricingData,
+  getAllToolPricing,
+  getToolPricingByProvider,
+  getMarkupMultiplier,
+  getMarkupMultiplierById,
+  getPricingByProvider,
+  searchPricingByModelName,
+  getAICostByMessageId,
 } = costs.clientApi();
 ```
 

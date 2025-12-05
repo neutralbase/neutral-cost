@@ -45,6 +45,13 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         any,
         Name
       >;
+      getAICostByMessageId: FunctionReference<
+        "query",
+        "internal",
+        { messageId: string },
+        any,
+        Name
+      >;
       getAICostsByThread: FunctionReference<
         "query",
         "internal",

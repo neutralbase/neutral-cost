@@ -1,7 +1,9 @@
 import { defineApp } from "convex/server";
-import costComponent from "neutral-cost/convex.config.js";
+import neutralCost from "neutral-cost/convex.config.js";
+import agentComponent from "@convex-dev/agent/convex.config.js";
 
 const app = defineApp();
-app.use(costComponent);
+app.use(neutralCost);
+app.use(agentComponent);
 
 export default app;
