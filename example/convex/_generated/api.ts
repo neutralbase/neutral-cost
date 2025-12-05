@@ -8,7 +8,10 @@
  * @module
  */
 
+import type * as agent from "../agent.js";
+import type * as crons from "../crons.js";
 import type * as example from "../example.js";
+import type * as tools from "../tools.js";
 
 import type {
   ApiFromModules,
@@ -18,7 +21,10 @@ import type {
 import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
+  agent: typeof agent;
+  crons: typeof crons;
   example: typeof example;
+  tools: typeof tools;
 }> = anyApi as any;
 
 /**
@@ -48,5 +54,6 @@ export const internal: FilterApi<
 > = anyApi as any;
 
 export const components = componentsGeneric() as unknown as {
-  costComponent: import("neutral-cost/_generated/component.js").ComponentApi<"costComponent">;
+  neutralCost: import("neutral-cost/_generated/component.js").ComponentApi<"neutralCost">;
+  agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
 };

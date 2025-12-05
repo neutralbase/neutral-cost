@@ -1,12 +1,13 @@
+/// <reference types="vite/client" />
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
-import App from "./App.jsx";
 import "./index.css";
+import App from "./App";
 
-const address = import.meta.env.VITE_CONVEX_URL;
-
-const convex = new ConvexReactClient(address);
+const convex = new ConvexReactClient(
+  (import.meta as unknown as { env: { VITE_CONVEX_URL: string } }).env.VITE_CONVEX_URL
+);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

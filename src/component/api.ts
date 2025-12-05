@@ -5,6 +5,7 @@ import {
   getAICostsByUser,
   getTotalAICostsByUser,
   getTotalAICostsByThread,
+  getAICostByMessageId,
 } from "./aiCosts.js";
 import {
   getMarkupMultipliers,
@@ -13,6 +14,7 @@ import {
   upsertModelMarkup,
   upsertToolMarkup,
   deleteMarkup,
+  getMarkupMultiplierById,
 } from "./markup.js";
 import {
   getAllPricing,
@@ -53,6 +55,7 @@ export function createAICostsApi() {
     getAICostsByUser,
     getTotalAICostsByUser,
     getTotalAICostsByThread,
+    getAICostByMessageId,
   };
 }
 
@@ -104,6 +107,7 @@ export function createMarkupApi() {
   return {
     getMarkupMultipliers,
     getMarkupMultiplier,
+    getMarkupMultiplierById,
     upsertProviderMarkup,
     upsertModelMarkup,
     upsertToolMarkup,

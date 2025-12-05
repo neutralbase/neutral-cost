@@ -1,13 +1,8 @@
-import { mutationGeneric, queryGeneric } from "convex/server";
 import { v } from "convex/values";
-import {
-  vMarkupMultiplierConfig,
-  vProviderMarkup,
-  vModelMarkup,
-  vToolMarkup,
-} from "../validators.js";
+import { mutation, query } from "./_generated/server.js";
+import { vProviderMarkup, vModelMarkup, vToolMarkup } from "../validators.js";
 
-export const getMarkupMultipliers = queryGeneric({
+export const getMarkupMultipliers = query({
   args: {},
   returns: v.object({
     providerMultipliers: v.array(
@@ -66,68 +61,71 @@ export const getMarkupMultipliers = queryGeneric({
 });
 
 /**
- * Get a specific markup multiplier by scope and identifiers
+ * Get the markup multiplier for a specific provider/model/tool combination.
+ * Priority: model-specific > tool-specific > provider-specific > 0
  */
-export const getMarkupMultiplier = queryGeneric({
+export const getMarkupMultiplier = query({
   args: {
-    scope: v.union(
-      v.literal("provider"),
-      v.literal("model"),
-      v.literal("tool"),
-    ),
     providerId: v.string(),
     modelId: v.optional(v.string()),
     toolId: v.optional(v.string()),
   },
-  returns: v.union(vMarkupMultiplierConfig, v.null()),
+  returns: v.number(),
   handler: async (ctx, args) => {
-    const allByProvider = await ctx.db
+    // First, check for model-specific markup if modelId is provided
+    if (args.modelId) {
+      const modelMatch = await ctx.db
+        .query("markupMultiplier")
+        .withIndex("by_provider_and_model", (q) =>
+          q.eq("providerId", args.providerId).eq("modelId", args.modelId),
+        )
+        .first();
+      if (modelMatch) {
+        return modelMatch.markupMultiplier;
+      }
+    }
+
+    // Check for tool-specific markup if toolId is provided
+    if (args.toolId) {
+      const toolMatch = await ctx.db
+        .query("markupMultiplier")
+        .withIndex("by_provider_and_tool", (q) =>
+          q.eq("providerId", args.providerId).eq("toolId", args.toolId),
+        )
+        .first();
+      if (toolMatch) {
+        return toolMatch.markupMultiplier;
+      }
+    }
+
+    // Fall back to provider-level markup
+    const providerMatch = await ctx.db
       .query("markupMultiplier")
-      .withIndex("by_provider", (q) => q.eq("providerId", args.providerId))
-      .collect();
-
-    const match = allByProvider.find((m) => {
-      if (m.scope !== args.scope) return false;
-      if (args.scope === "provider") return true;
-      if (args.scope === "model") {
-        return (m as { modelId: string }).modelId === args.modelId;
-      }
-      if (args.scope === "tool") {
-        return (m as { toolId: string }).toolId === args.toolId;
-      }
-      return false;
-    });
-
-    if (!match) return null;
-
-    if (match.scope === "provider") {
-      return {
-        scope: "provider" as const,
-        providerId: match.providerId,
-        markupMultiplier: match.markupMultiplier,
-      };
+      .withIndex("by_scope_and_provider", (q) =>
+        q.eq("scope", "provider").eq("providerId", args.providerId),
+      )
+      .first();
+    if (providerMatch) {
+      return providerMatch.markupMultiplier;
     }
-    if (match.scope === "model") {
-      return {
-        scope: "model" as const,
-        providerId: match.providerId,
-        modelId: (match as { modelId: string }).modelId,
-        markupMultiplier: match.markupMultiplier,
-      };
-    }
-    return {
-      scope: "tool" as const,
-      providerId: match.providerId,
-      toolId: (match as { toolId: string }).toolId,
-      markupMultiplier: match.markupMultiplier,
-    };
+
+    return 0;
+  },
+});
+
+export const getMarkupMultiplierById = query({
+  args: {
+    markupMultiplierId: v.id("markupMultiplier"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.markupMultiplierId);
   },
 });
 
 /**
  * Upsert a provider markup multiplier
  */
-export const upsertProviderMarkup = mutationGeneric({
+export const upsertProviderMarkup = mutation({
   args: vProviderMarkup.fields,
   returns: v.id("markupMultiplier"),
   handler: async (ctx, args) => {
@@ -156,7 +154,7 @@ export const upsertProviderMarkup = mutationGeneric({
 /**
  * Upsert a model markup multiplier
  */
-export const upsertModelMarkup = mutationGeneric({
+export const upsertModelMarkup = mutation({
   args: vModelMarkup.fields,
   returns: v.id("markupMultiplier"),
   handler: async (ctx, args) => {
@@ -190,7 +188,7 @@ export const upsertModelMarkup = mutationGeneric({
 /**
  * Upsert a tool markup multiplier
  */
-export const upsertToolMarkup = mutationGeneric({
+export const upsertToolMarkup = mutation({
   args: vToolMarkup.fields,
   returns: v.id("markupMultiplier"),
   handler: async (ctx, args) => {
@@ -223,7 +221,7 @@ export const upsertToolMarkup = mutationGeneric({
 /**
  * Delete a markup multiplier
  */
-export const deleteMarkup = mutationGeneric({
+export const deleteMarkup = mutation({
   args: {
     scope: v.union(
       v.literal("provider"),

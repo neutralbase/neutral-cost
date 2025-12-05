@@ -18,9 +18,9 @@ import {
 import {
   calculateToolCost,
   calculateToolCostFromTokenPricing,
-  getMarkupMultiplier,
   type CalculatedToolCost,
 } from "../shared.js";
+import schema from "./schema.js";
 
 // ============================================================================
 // Types
@@ -59,24 +59,15 @@ export const addToolCost = actionGeneric({
     });
 
     if (!pricing) {
-      console.warn(
-        `No pricing found for provider ${args.providerId}${args.toolId ? ` model ${args.toolId}` : ""}`,
-      );
       throw new Error("Pricing not found for tool");
     }
 
     // Calculate cost based on pricing source
     let calculatedResult: CalculatedToolCost;
 
-    const markupMultipliers = await ctx.runQuery(
-      api.markup.getMarkupMultipliers,
-    );
-    const markup = getMarkupMultiplier({
+    const markup = await ctx.runQuery(api.markup.getMarkupMultiplier, {
       providerId: args.providerId,
       toolId: args.toolId,
-      providerMarkupMultipliers: markupMultipliers.providerMultipliers,
-      modelMarkupMultipliers: markupMultipliers.modelMarkupMultipliers,
-      toolMarkupMultipliers: markupMultipliers.toolMarkupMultipliers,
     });
 
     const markupMultiplier = args.markupMultiplier ?? markup;
@@ -182,9 +173,16 @@ export const getToolCostsByThread = queryGeneric({
   args: {
     threadId: v.string(),
   },
+  returns: v.array(
+    schema.tables.costPerTools.validator.extend({
+      _id: v.id("costPerTools"),
+      _creationTime: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerTools")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_thread", (q: any) => q.eq("threadId", args.threadId))
       .collect();
   },
@@ -200,9 +198,16 @@ export const getToolCostsByUser = queryGeneric({
   args: {
     userId: v.string(),
   },
+  returns: v.array(
+    schema.tables.costPerTools.validator.extend({
+      _id: v.id("costPerTools"),
+      _creationTime: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerTools")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .collect();
   },
@@ -224,6 +229,7 @@ export const getToolCostsByProviderAndTool = queryGeneric({
     if (args.toolId) {
       return await ctx.db
         .query("costPerTools")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .withIndex("by_provider_and_tool", (q: any) =>
           q.eq("providerId", args.providerId).eq("toolId", args.toolId),
         )
@@ -231,6 +237,7 @@ export const getToolCostsByProviderAndTool = queryGeneric({
     }
     return await ctx.db
       .query("costPerTools")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_provider", (q: any) => q.eq("providerId", args.providerId))
       .collect();
   },
@@ -253,14 +260,17 @@ export const getTotalToolCostsByUser = queryGeneric({
   handler: async (ctx, args) => {
     const costs = await ctx.db
       .query("costPerTools")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
       .collect();
 
     const totalAmount = costs.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, c: any) => sum + c.cost.amount,
       0,
     );
     const totalUserAmount = costs.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, c: any) => sum + c.costForUser.amount,
       0,
     );
@@ -286,14 +296,17 @@ export const getTotalToolCostsByThread = queryGeneric({
   handler: async (ctx, args) => {
     const costs = await ctx.db
       .query("costPerTools")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .withIndex("by_thread", (q: any) => q.eq("threadId", args.threadId))
       .collect();
 
     const totalAmount = costs.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, c: any) => sum + c.cost.amount,
       0,
     );
     const totalUserAmount = costs.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (sum: number, c: any) => sum + c.costForUser.amount,
       0,
     );

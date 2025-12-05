@@ -2,21 +2,13 @@ import type {
   ApiFromModules,
   GenericActionCtx,
   GenericDataModel,
-  GenericMutationCtx,
   GenericQueryCtx,
 } from "convex/server";
 import { actionGeneric, queryGeneric } from "convex/server";
 import { v } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component.js";
-import type {
-  Usage,
-  ToolUsage,
-  Cost,
-  CostForUser,
-  ToolCost,
-  ToolCostForUser,
-} from "../validators.js";
-import { vUsage, vToolUsage, vAddAICost, vAddToolCost } from "../validators.js";
+import type { Usage, ToolUsage } from "../validators.js";
+import { vAddAICost, vAddToolCost } from "../validators.js";
 import type { AddAICostResult } from "../component/aiCosts.js";
 import type { AddToolCostResult } from "../component/toolCosts.js";
 import type {
@@ -213,6 +205,19 @@ export class CostComponent {
    */
   async getAICostsByUser(ctx: CtxWith<"runQuery">, userId: string) {
     return ctx.runQuery(this.component.aiCosts.getAICostsByUser, { userId });
+  }
+
+  /**
+   * Get AI cost for a specific message.
+   *
+   * @param ctx - A Convex query context.
+   * @param messageId - The message identifier.
+   * @returns The AI cost record for the message or null if not found.
+   */
+  async getAICostByMessageId(ctx: CtxWith<"runQuery">, messageId: string) {
+    return ctx.runQuery(this.component.aiCosts.getAICostByMessageId, {
+      messageId,
+    });
   }
 
   /**
@@ -470,6 +475,45 @@ export class CostComponent {
   }
 
   // ==========================================================================
+  // Markup
+  // ==========================================================================
+
+  /**
+   * Get the markup multiplier for a specific provider/model/tool combination.
+   * Priority: model-specific > tool-specific > provider-specific > 0
+   *
+   * @param ctx - A Convex query context.
+   * @param args - The provider, model, and tool identifiers.
+   * @returns The applicable markup multiplier.
+   */
+  async getMarkupMultiplier(
+    ctx: CtxWith<"runQuery">,
+    args: {
+      providerId: string;
+      modelId?: string;
+      toolId?: string;
+    },
+  ) {
+    return ctx.runQuery(this.component.markup.getMarkupMultiplier, args);
+  }
+
+  /**
+   * Get a markup multiplier by its ID.
+   *
+   * @param ctx - A Convex query context.
+   * @param markupMultiplierId - The markup multiplier document ID.
+   * @returns The markup multiplier document or null if not found.
+   */
+  async getMarkupMultiplierById(
+    ctx: CtxWith<"runQuery">,
+    markupMultiplierId: string,
+  ) {
+    return ctx.runQuery(this.component.markup.getMarkupMultiplierById, {
+      markupMultiplierId,
+    });
+  }
+
+  // ==========================================================================
   // Client API
   // ==========================================================================
 
@@ -488,6 +532,7 @@ export class CostComponent {
    * export const {
    *   getAICostsByThread,
    *   getAICostsByUser,
+   *   getAICostByMessageId,
    *   getTotalAICostsByUser,
    *   getTotalAICostsByThread,
    *   getToolCostsByThread,
@@ -505,6 +550,7 @@ export class CostComponent {
       ctx: GenericQueryCtx<DataModel>,
       threadId?: string,
       userId?: string,
+      messageId?: string,
     ) => void | Promise<void>;
     checkToolCostAccess?: (
       ctx: GenericQueryCtx<DataModel>,
@@ -630,7 +676,12 @@ export class CostComponent {
         args: { threadId: v.string() },
         handler: async (ctx, args) => {
           if (opts?.checkAICostAccess) {
-            await opts.checkAICostAccess(ctx, args.threadId, undefined);
+            await opts.checkAICostAccess(
+              ctx,
+              args.threadId,
+              undefined,
+              undefined,
+            );
           }
           return ctx.runQuery(this.component.aiCosts.getAICostsByThread, {
             threadId: args.threadId,
@@ -642,10 +693,32 @@ export class CostComponent {
         args: { userId: v.string() },
         handler: async (ctx, args) => {
           if (opts?.checkAICostAccess) {
-            await opts.checkAICostAccess(ctx, undefined, args.userId);
+            await opts.checkAICostAccess(
+              ctx,
+              undefined,
+              args.userId,
+              undefined,
+            );
           }
           return ctx.runQuery(this.component.aiCosts.getAICostsByUser, {
             userId: args.userId,
+          });
+        },
+      }),
+
+      getAICostByMessageId: queryGeneric({
+        args: { messageId: v.string() },
+        handler: async (ctx, args) => {
+          if (opts?.checkAICostAccess) {
+            await opts.checkAICostAccess(
+              ctx,
+              undefined,
+              undefined,
+              args.messageId,
+            );
+          }
+          return ctx.runQuery(this.component.aiCosts.getAICostByMessageId, {
+            messageId: args.messageId,
           });
         },
       }),
@@ -654,7 +727,12 @@ export class CostComponent {
         args: { userId: v.string() },
         handler: async (ctx, args) => {
           if (opts?.checkAICostAccess) {
-            await opts.checkAICostAccess(ctx, undefined, args.userId);
+            await opts.checkAICostAccess(
+              ctx,
+              undefined,
+              args.userId,
+              undefined,
+            );
           }
           return ctx.runQuery(this.component.aiCosts.getTotalAICostsByUser, {
             userId: args.userId,
@@ -666,7 +744,12 @@ export class CostComponent {
         args: { threadId: v.string() },
         handler: async (ctx, args) => {
           if (opts?.checkAICostAccess) {
-            await opts.checkAICostAccess(ctx, args.threadId, undefined);
+            await opts.checkAICostAccess(
+              ctx,
+              args.threadId,
+              undefined,
+              undefined,
+            );
           }
           return ctx.runQuery(this.component.aiCosts.getTotalAICostsByThread, {
             threadId: args.threadId,
@@ -783,6 +866,30 @@ export class CostComponent {
           return ctx.runQuery(this.component.pricing.getToolPricingByProvider, {
             providerId: args.providerId,
           });
+        },
+      }),
+
+      // Markup Queries
+      getMarkupMultiplier: queryGeneric({
+        args: {
+          providerId: v.string(),
+          modelId: v.optional(v.string()),
+          toolId: v.optional(v.string()),
+        },
+        handler: async (ctx, args) => {
+          return ctx.runQuery(this.component.markup.getMarkupMultiplier, args);
+        },
+      }),
+
+      getMarkupMultiplierById: queryGeneric({
+        args: {
+          markupMultiplierId: v.id("markupMultiplier"),
+        },
+        handler: async (ctx, args) => {
+          return ctx.runQuery(
+            this.component.markup.getMarkupMultiplierById,
+            args,
+          );
         },
       }),
     };

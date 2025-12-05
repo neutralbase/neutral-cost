@@ -1,10 +1,6 @@
-import {
-  actionGeneric,
-  internalMutationGeneric,
-  queryGeneric,
-} from "convex/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api.js";
+import { action, internalMutation, query } from "./_generated/server.js";
 import {
   vAddAICost,
   vCost,
@@ -13,12 +9,9 @@ import {
   type Cost,
   type CostForUser,
 } from "../validators.js";
-import {
-  calculateCosts,
-  calculateUserCosts,
-  getMarkupMultiplier,
-} from "../shared.js";
+import { calculateCosts, calculateUserCosts } from "../shared.js";
 import type { Id } from "./_generated/dataModel.js";
+import schema from "./schema.js";
 
 export type AddAICostResult = {
   costs: Cost;
@@ -42,7 +35,7 @@ type UserCost = ReturnType<typeof calculateUserCosts>;
  * @param modelMarkupMultiplier - Multiplier for user-facing costs
  * @returns Calculated costs, user costs, and database record ID
  */
-export const addAICost = actionGeneric({
+export const addAICost = action({
   args: vAddAICost,
   handler: async (ctx, args): Promise<AddAICostResult> => {
     // Get pricing for the model
@@ -52,22 +45,15 @@ export const addAICost = actionGeneric({
     });
 
     if (!pricing) {
-      console.warn(`No pricing found for modelId: ${args.modelId}`);
       throw new Error("Pricing not found for model");
     }
 
     // Calculate actual costs using pricing data
     const costs = calculateCosts(args.usage, pricing);
 
-    const markupMultipliers = await ctx.runQuery(
-      api.markup.getMarkupMultipliers,
-    );
-    const markup = getMarkupMultiplier({
+    const markup = await ctx.runQuery(api.markup.getMarkupMultiplier, {
       providerId: args.providerId,
       modelId: args.modelId,
-      providerMarkupMultipliers: markupMultipliers.providerMultipliers,
-      modelMarkupMultipliers: markupMultipliers.modelMarkupMultipliers,
-      toolMarkupMultipliers: markupMultipliers.toolMarkupMultipliers,
     });
 
     // Calculate user costs with 50% markup (all values in USD)
@@ -121,7 +107,7 @@ export const addAICost = actionGeneric({
  * @param usage - Token usage data
  * @returns Database record ID
  */
-export const saveAICost = internalMutationGeneric({
+export const saveAICost = internalMutation({
   args: {
     messageId: v.string(),
     userId: v.optional(v.string()),
@@ -154,14 +140,20 @@ export const saveAICost = internalMutationGeneric({
  * @param threadId - Thread/conversation identifier
  * @returns Array of AI cost records for the thread
  */
-export const getAICostsByThread = queryGeneric({
+export const getAICostsByThread = query({
   args: {
     threadId: v.string(),
   },
+  returns: v.array(
+    schema.tables.costPerAIRequest.validator.extend({
+      _id: v.id("costPerAIRequest"),
+      _creationTime: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerAIRequest")
-      .withIndex("by_thread", (q: any) => q.eq("threadId", args.threadId))
+      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
       .collect();
   },
 });
@@ -172,14 +164,20 @@ export const getAICostsByThread = queryGeneric({
  * @param userId - User identifier
  * @returns Array of AI cost records for the user
  */
-export const getAICostsByUser = queryGeneric({
+export const getAICostsByUser = query({
   args: {
     userId: v.string(),
   },
+  returns: v.array(
+    schema.tables.costPerAIRequest.validator.extend({
+      _id: v.id("costPerAIRequest"),
+      _creationTime: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerAIRequest")
-      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
   },
 });
@@ -194,22 +192,24 @@ export const getAICostsByUser = queryGeneric({
  * @param userId - User identifier
  * @returns Count and total costs (raw and user-facing)
  */
-export const getTotalAICostsByUser = queryGeneric({
+export const getTotalAICostsByUser = query({
   args: {
     userId: v.string(),
   },
   handler: async (ctx, args) => {
     const costs = await ctx.db
       .query("costPerAIRequest")
-      .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     const totalAmount = costs.reduce(
-      (sum: number, c: any) => sum + c.cost.totalCost,
+      (sum: number, c: { cost: { totalCost: number } }) =>
+        sum + c.cost.totalCost,
       0,
     );
     const totalUserAmount = costs.reduce(
-      (sum: number, c: any) => sum + c.costForUser.totalCost,
+      (sum: number, c: { costForUser: { totalCost: number } }) =>
+        sum + c.costForUser.totalCost,
       0,
     );
 
@@ -227,22 +227,24 @@ export const getTotalAICostsByUser = queryGeneric({
  * @param threadId - Thread/conversation identifier
  * @returns Count and total costs (raw and user-facing)
  */
-export const getTotalAICostsByThread = queryGeneric({
+export const getTotalAICostsByThread = query({
   args: {
     threadId: v.string(),
   },
   handler: async (ctx, args) => {
     const costs = await ctx.db
       .query("costPerAIRequest")
-      .withIndex("by_thread", (q: any) => q.eq("threadId", args.threadId))
+      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
       .collect();
 
     const totalAmount = costs.reduce(
-      (sum: number, c: any) => sum + c.cost.totalCost,
+      (sum: number, c: { cost: { totalCost: number } }) =>
+        sum + c.cost.totalCost,
       0,
     );
     const totalUserAmount = costs.reduce(
-      (sum: number, c: any) => sum + c.costForUser.totalCost,
+      (sum: number, c: { costForUser: { totalCost: number } }) =>
+        sum + c.costForUser.totalCost,
       0,
     );
 
@@ -251,5 +253,23 @@ export const getTotalAICostsByThread = queryGeneric({
       totalAmount: Math.round(totalAmount * 1e8) / 1e8,
       totalUserAmount: Math.round(totalUserAmount * 1e8) / 1e8,
     };
+  },
+});
+
+/**
+ * Get AI cost for a specific message.
+ *
+ * @param messageId - Message identifier
+ * @returns AI cost record for the message, or null if not found
+ */
+export const getAICostByMessageId = query({
+  args: {
+    messageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("costPerAIRequest")
+      .withIndex("by_message", (q) => q.eq("messageId", args.messageId))
+      .first();
   },
 });

@@ -1,16 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { CostComponent } from "./index.js";
 import type { DataModelFromSchemaDefinition } from "convex/server";
-import {
-  anyApi,
-  queryGeneric,
-  actionGeneric,
-} from "convex/server";
-import type {
-  ApiFromModules,
-  ActionBuilder,
-  QueryBuilder,
-} from "convex/server";
+import { anyApi, queryGeneric } from "convex/server";
+import type { ApiFromModules, QueryBuilder } from "convex/server";
 import { v } from "convex/values";
 import { defineSchema } from "convex/server";
 import { components, initConvexTest } from "./setup.test.js";
@@ -19,7 +11,6 @@ import { components, initConvexTest } from "./setup.test.js";
 const schema = defineSchema({});
 type DataModel = DataModelFromSchemaDefinition<typeof schema>;
 const query = queryGeneric as QueryBuilder<DataModel, "public">;
-const action = actionGeneric as ActionBuilder<DataModel, "public">;
 
 const costs = new CostComponent(components.costComponent, {});
 
