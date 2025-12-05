@@ -161,17 +161,9 @@ export const listThreadMessages = query({
   },
   handler: async (ctx, args) => {
     // Fetches the regular non-streaming messages.
-    const paginated = await listUIMessages(
-      ctx,
-      components.agent as Parameters<typeof listUIMessages>[1],
-      args,
-    );
+    const paginated = await listUIMessages(ctx, components.agent, args);
 
-    const streams = await syncStreams(
-      ctx,
-      components.agent as Parameters<typeof syncStreams>[1],
-      args,
-    );
+    const streams = await syncStreams(ctx, components.agent, args);
     return { ...paginated, streams };
   },
 });

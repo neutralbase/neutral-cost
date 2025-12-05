@@ -1,8 +1,8 @@
-import { mutationGeneric, queryGeneric } from "convex/server";
 import { v } from "convex/values";
+import { mutation, query } from "./_generated/server.js";
 import { vProviderMarkup, vModelMarkup, vToolMarkup } from "../validators.js";
 
-export const getMarkupMultipliers = queryGeneric({
+export const getMarkupMultipliers = query({
   args: {},
   returns: v.object({
     providerMultipliers: v.array(
@@ -64,7 +64,7 @@ export const getMarkupMultipliers = queryGeneric({
  * Get the markup multiplier for a specific provider/model/tool combination.
  * Priority: model-specific > tool-specific > provider-specific > 0
  */
-export const getMarkupMultiplier = queryGeneric({
+export const getMarkupMultiplier = query({
   args: {
     providerId: v.string(),
     modelId: v.optional(v.string()),
@@ -76,8 +76,7 @@ export const getMarkupMultiplier = queryGeneric({
     if (args.modelId) {
       const modelMatch = await ctx.db
         .query("markupMultiplier")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .withIndex("by_provider_and_model", (q: any) =>
+        .withIndex("by_provider_and_model", (q) =>
           q.eq("providerId", args.providerId).eq("modelId", args.modelId),
         )
         .first();
@@ -90,8 +89,7 @@ export const getMarkupMultiplier = queryGeneric({
     if (args.toolId) {
       const toolMatch = await ctx.db
         .query("markupMultiplier")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .withIndex("by_provider_and_tool", (q: any) =>
+        .withIndex("by_provider_and_tool", (q) =>
           q.eq("providerId", args.providerId).eq("toolId", args.toolId),
         )
         .first();
@@ -103,8 +101,7 @@ export const getMarkupMultiplier = queryGeneric({
     // Fall back to provider-level markup
     const providerMatch = await ctx.db
       .query("markupMultiplier")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .withIndex("by_scope_and_provider", (q: any) =>
+      .withIndex("by_scope_and_provider", (q) =>
         q.eq("scope", "provider").eq("providerId", args.providerId),
       )
       .first();
@@ -116,7 +113,7 @@ export const getMarkupMultiplier = queryGeneric({
   },
 });
 
-export const getMarkupMultiplierById = queryGeneric({
+export const getMarkupMultiplierById = query({
   args: {
     markupMultiplierId: v.id("markupMultiplier"),
   },
@@ -128,7 +125,7 @@ export const getMarkupMultiplierById = queryGeneric({
 /**
  * Upsert a provider markup multiplier
  */
-export const upsertProviderMarkup = mutationGeneric({
+export const upsertProviderMarkup = mutation({
   args: vProviderMarkup.fields,
   returns: v.id("markupMultiplier"),
   handler: async (ctx, args) => {
@@ -157,7 +154,7 @@ export const upsertProviderMarkup = mutationGeneric({
 /**
  * Upsert a model markup multiplier
  */
-export const upsertModelMarkup = mutationGeneric({
+export const upsertModelMarkup = mutation({
   args: vModelMarkup.fields,
   returns: v.id("markupMultiplier"),
   handler: async (ctx, args) => {
@@ -191,7 +188,7 @@ export const upsertModelMarkup = mutationGeneric({
 /**
  * Upsert a tool markup multiplier
  */
-export const upsertToolMarkup = mutationGeneric({
+export const upsertToolMarkup = mutation({
   args: vToolMarkup.fields,
   returns: v.id("markupMultiplier"),
   handler: async (ctx, args) => {
@@ -224,7 +221,7 @@ export const upsertToolMarkup = mutationGeneric({
 /**
  * Delete a markup multiplier
  */
-export const deleteMarkup = mutationGeneric({
+export const deleteMarkup = mutation({
   args: {
     scope: v.union(
       v.literal("provider"),

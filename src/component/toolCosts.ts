@@ -20,6 +20,7 @@ import {
   calculateToolCostFromTokenPricing,
   type CalculatedToolCost,
 } from "../shared.js";
+import schema from "./schema.js";
 
 // ============================================================================
 // Types
@@ -172,6 +173,12 @@ export const getToolCostsByThread = queryGeneric({
   args: {
     threadId: v.string(),
   },
+  returns: v.array(
+    schema.tables.costPerTools.validator.extend({
+      _id: v.id("costPerTools"),
+      _creationTime: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerTools")
@@ -191,6 +198,12 @@ export const getToolCostsByUser = queryGeneric({
   args: {
     userId: v.string(),
   },
+  returns: v.array(
+    schema.tables.costPerTools.validator.extend({
+      _id: v.id("costPerTools"),
+      _creationTime: v.number(),
+    }),
+  ),
   handler: async (ctx, args) => {
     return await ctx.db
       .query("costPerTools")

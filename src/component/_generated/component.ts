@@ -56,14 +56,68 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "query",
         "internal",
         { threadId: string },
-        any,
+        Array<{
+          _creationTime: number;
+          _id: string;
+          cost: {
+            cachedInputTokensCost?: number;
+            completionTokensCost: number;
+            promptTokensCost: number;
+            reasoningTokensCost?: number;
+            totalCost: number;
+          };
+          costForUser: {
+            cachedInputTokensCost?: number;
+            completionTokensCost: number;
+            promptTokensCost: number;
+            reasoningTokensCost?: number;
+            totalCost: number;
+          };
+          messageId: string;
+          threadId: string;
+          usage: {
+            cachedInputTokens?: number;
+            completionTokens: number;
+            promptTokens: number;
+            reasoningTokens?: number;
+            totalTokens: number;
+          };
+          userId?: string;
+        }>,
         Name
       >;
       getAICostsByUser: FunctionReference<
         "query",
         "internal",
         { userId: string },
-        any,
+        Array<{
+          _creationTime: number;
+          _id: string;
+          cost: {
+            cachedInputTokensCost?: number;
+            completionTokensCost: number;
+            promptTokensCost: number;
+            reasoningTokensCost?: number;
+            totalCost: number;
+          };
+          costForUser: {
+            cachedInputTokensCost?: number;
+            completionTokensCost: number;
+            promptTokensCost: number;
+            reasoningTokensCost?: number;
+            totalCost: number;
+          };
+          messageId: string;
+          threadId: string;
+          usage: {
+            cachedInputTokens?: number;
+            completionTokens: number;
+            promptTokens: number;
+            reasoningTokens?: number;
+            totalTokens: number;
+          };
+          userId?: string;
+        }>,
         Name
       >;
       getTotalAICostsByThread: FunctionReference<
@@ -406,14 +460,352 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         "query",
         "internal",
         { threadId: string },
-        any,
+        Array<{
+          _creationTime: number;
+          _id: string;
+          cost: {
+            amount: number;
+            breakdown?:
+              | { costPerCredit: number; credits: number; type: "credits" }
+              | {
+                  cacheReadTokensCost?: number;
+                  cacheWriteTokensCost?: number;
+                  inputTokensCost?: number;
+                  outputTokensCost?: number;
+                  reasoningTokensCost?: number;
+                  type: "tokens";
+                }
+              | { costPerRequest: number; requests: number; type: "requests" }
+              | {
+                  computeType?: string;
+                  costPerMs: number;
+                  durationMs: number;
+                  type: "compute";
+                }
+              | {
+                  bytes: number;
+                  costPerByteSecond: number;
+                  durationSeconds: number;
+                  type: "storage";
+                }
+              | {
+                  bytesInCost?: number;
+                  bytesOutCost?: number;
+                  type: "bandwidth";
+                }
+              | {
+                  costPerUnit: number;
+                  type: "units";
+                  unitType: string;
+                  units: number;
+                }
+              | {
+                  effectiveRate: number;
+                  quantity: number;
+                  tierApplied: string;
+                  type: "tiered";
+                }
+              | {
+                  components: Array<{
+                    name: string;
+                    quantity: number;
+                    totalCost: number;
+                    unitCost: number;
+                  }>;
+                  type: "composite";
+                }
+              | { data: any; type: "custom" };
+            currency: string;
+          };
+          costForUser: {
+            amount: number;
+            breakdown?:
+              | { costPerCredit: number; credits: number; type: "credits" }
+              | {
+                  cacheReadTokensCost?: number;
+                  cacheWriteTokensCost?: number;
+                  inputTokensCost?: number;
+                  outputTokensCost?: number;
+                  reasoningTokensCost?: number;
+                  type: "tokens";
+                }
+              | { costPerRequest: number; requests: number; type: "requests" }
+              | {
+                  computeType?: string;
+                  costPerMs: number;
+                  durationMs: number;
+                  type: "compute";
+                }
+              | {
+                  bytes: number;
+                  costPerByteSecond: number;
+                  durationSeconds: number;
+                  type: "storage";
+                }
+              | {
+                  bytesInCost?: number;
+                  bytesOutCost?: number;
+                  type: "bandwidth";
+                }
+              | {
+                  costPerUnit: number;
+                  type: "units";
+                  unitType: string;
+                  units: number;
+                }
+              | {
+                  effectiveRate: number;
+                  quantity: number;
+                  tierApplied: string;
+                  type: "tiered";
+                }
+              | {
+                  components: Array<{
+                    name: string;
+                    quantity: number;
+                    totalCost: number;
+                    unitCost: number;
+                  }>;
+                  type: "composite";
+                }
+              | { data: any; type: "custom" };
+            currency: string;
+            markupMultiplier?: number;
+          };
+          messageId: string;
+          providerId: string;
+          threadId: string;
+          timestamp: number;
+          toolId: string;
+          usage:
+            | { creditType?: string; credits: number; type: "credits" }
+            | {
+                cacheReadTokens?: number;
+                cacheWriteTokens?: number;
+                inputTokens: number;
+                outputTokens: number;
+                reasoningTokens?: number;
+                type: "tokens";
+              }
+            | { requestType?: string; requests: number; type: "requests" }
+            | {
+                computeType?: string;
+                durationMs: number;
+                tier?: string;
+                type: "compute";
+              }
+            | {
+                bytes: number;
+                durationSeconds?: number;
+                storageClass?: string;
+                type: "storage";
+              }
+            | {
+                bytesIn?: number;
+                bytesOut?: number;
+                region?: string;
+                type: "bandwidth";
+              }
+            | {
+                metadata?: Record<string, any>;
+                type: "units";
+                unitType: string;
+                units: number;
+              }
+            | {
+                quantity: number;
+                tierName?: string;
+                type: "tiered";
+                unitType: string;
+              }
+            | {
+                components: Array<{
+                  cost?: number;
+                  name: string;
+                  quantity: number;
+                  unitType: string;
+                }>;
+                type: "composite";
+              }
+            | { data: any; description?: string; type: "custom" };
+          userId?: string;
+        }>,
         Name
       >;
       getToolCostsByUser: FunctionReference<
         "query",
         "internal",
         { userId: string },
-        any,
+        Array<{
+          _creationTime: number;
+          _id: string;
+          cost: {
+            amount: number;
+            breakdown?:
+              | { costPerCredit: number; credits: number; type: "credits" }
+              | {
+                  cacheReadTokensCost?: number;
+                  cacheWriteTokensCost?: number;
+                  inputTokensCost?: number;
+                  outputTokensCost?: number;
+                  reasoningTokensCost?: number;
+                  type: "tokens";
+                }
+              | { costPerRequest: number; requests: number; type: "requests" }
+              | {
+                  computeType?: string;
+                  costPerMs: number;
+                  durationMs: number;
+                  type: "compute";
+                }
+              | {
+                  bytes: number;
+                  costPerByteSecond: number;
+                  durationSeconds: number;
+                  type: "storage";
+                }
+              | {
+                  bytesInCost?: number;
+                  bytesOutCost?: number;
+                  type: "bandwidth";
+                }
+              | {
+                  costPerUnit: number;
+                  type: "units";
+                  unitType: string;
+                  units: number;
+                }
+              | {
+                  effectiveRate: number;
+                  quantity: number;
+                  tierApplied: string;
+                  type: "tiered";
+                }
+              | {
+                  components: Array<{
+                    name: string;
+                    quantity: number;
+                    totalCost: number;
+                    unitCost: number;
+                  }>;
+                  type: "composite";
+                }
+              | { data: any; type: "custom" };
+            currency: string;
+          };
+          costForUser: {
+            amount: number;
+            breakdown?:
+              | { costPerCredit: number; credits: number; type: "credits" }
+              | {
+                  cacheReadTokensCost?: number;
+                  cacheWriteTokensCost?: number;
+                  inputTokensCost?: number;
+                  outputTokensCost?: number;
+                  reasoningTokensCost?: number;
+                  type: "tokens";
+                }
+              | { costPerRequest: number; requests: number; type: "requests" }
+              | {
+                  computeType?: string;
+                  costPerMs: number;
+                  durationMs: number;
+                  type: "compute";
+                }
+              | {
+                  bytes: number;
+                  costPerByteSecond: number;
+                  durationSeconds: number;
+                  type: "storage";
+                }
+              | {
+                  bytesInCost?: number;
+                  bytesOutCost?: number;
+                  type: "bandwidth";
+                }
+              | {
+                  costPerUnit: number;
+                  type: "units";
+                  unitType: string;
+                  units: number;
+                }
+              | {
+                  effectiveRate: number;
+                  quantity: number;
+                  tierApplied: string;
+                  type: "tiered";
+                }
+              | {
+                  components: Array<{
+                    name: string;
+                    quantity: number;
+                    totalCost: number;
+                    unitCost: number;
+                  }>;
+                  type: "composite";
+                }
+              | { data: any; type: "custom" };
+            currency: string;
+            markupMultiplier?: number;
+          };
+          messageId: string;
+          providerId: string;
+          threadId: string;
+          timestamp: number;
+          toolId: string;
+          usage:
+            | { creditType?: string; credits: number; type: "credits" }
+            | {
+                cacheReadTokens?: number;
+                cacheWriteTokens?: number;
+                inputTokens: number;
+                outputTokens: number;
+                reasoningTokens?: number;
+                type: "tokens";
+              }
+            | { requestType?: string; requests: number; type: "requests" }
+            | {
+                computeType?: string;
+                durationMs: number;
+                tier?: string;
+                type: "compute";
+              }
+            | {
+                bytes: number;
+                durationSeconds?: number;
+                storageClass?: string;
+                type: "storage";
+              }
+            | {
+                bytesIn?: number;
+                bytesOut?: number;
+                region?: string;
+                type: "bandwidth";
+              }
+            | {
+                metadata?: Record<string, any>;
+                type: "units";
+                unitType: string;
+                units: number;
+              }
+            | {
+                quantity: number;
+                tierName?: string;
+                type: "tiered";
+                unitType: string;
+              }
+            | {
+                components: Array<{
+                  cost?: number;
+                  name: string;
+                  quantity: number;
+                  unitType: string;
+                }>;
+                type: "composite";
+              }
+            | { data: any; description?: string; type: "custom" };
+          userId?: string;
+        }>,
         Name
       >;
       getTotalToolCostsByThread: FunctionReference<
