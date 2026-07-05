@@ -160,6 +160,140 @@ export const saveToolCost = internalMutationGeneric({
   },
 });
 
+type RecomputeToolCostCursor = {
+  version: 1;
+  creationTime: number;
+  seenIds: string[];
+};
+
+type RecomputeToolCostMutationCtx = {
+  db: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    query: (tableName: "costPerTools") => any;
+  };
+};
+
+function parseRecomputeToolCostCursor(
+  cursor: string | null | undefined,
+): RecomputeToolCostCursor | null {
+  if (!cursor) {
+    return null;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cursor);
+  } catch {
+    throw new Error("Invalid recompute tool-cost cursor: malformed JSON");
+  }
+
+  if (parsed === null || typeof parsed !== "object") {
+    throw new Error("Invalid recompute tool-cost cursor");
+  }
+
+  const typed = parsed as Partial<RecomputeToolCostCursor>;
+  if (
+    typed.version !== 1 ||
+    typeof typed.creationTime !== "number" ||
+    !Number.isFinite(typed.creationTime) ||
+    !Array.isArray(typed.seenIds) ||
+    !typed.seenIds.every((id) => typeof id === "string")
+  ) {
+    throw new Error("Invalid recompute tool-cost cursor");
+  }
+
+  return {
+    version: 1,
+    creationTime: typed.creationTime,
+    seenIds: typed.seenIds,
+  };
+}
+
+function encodeRecomputeToolCostCursor(
+  rows: Array<Doc<"costPerTools">>,
+  previous: RecomputeToolCostCursor | null,
+): string | null {
+  const lastRow = rows[rows.length - 1];
+  if (!lastRow) {
+    return null;
+  }
+
+  const lastCreationTime = lastRow._creationTime;
+  const seenIds =
+    previous !== null && previous.creationTime === lastCreationTime
+      ? [...previous.seenIds]
+      : [];
+  const seenIdSet = new Set(seenIds);
+
+  for (const row of rows) {
+    if (row._creationTime !== lastCreationTime || seenIdSet.has(row._id)) {
+      continue;
+    }
+    seenIds.push(row._id);
+    seenIdSet.add(row._id);
+  }
+
+  return JSON.stringify({
+    version: 1,
+    creationTime: lastCreationTime,
+    seenIds,
+  } satisfies RecomputeToolCostCursor);
+}
+
+async function getRecomputeToolCostPage(
+  ctx: RecomputeToolCostMutationCtx,
+  args: { providerId: string; toolId?: string; cursor?: string | null },
+  numItems: number,
+): Promise<{
+  rows: Array<Doc<"costPerTools">>;
+  continueCursor: string | null;
+  isDone: boolean;
+}> {
+  const cursor = parseRecomputeToolCostCursor(args.cursor);
+  const seenIds = new Set(cursor?.seenIds ?? []);
+  const queryLimit = numItems + seenIds.size + 1;
+  const candidateRows = await (args.toolId
+    ? ctx.db
+        .query("costPerTools")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .withIndex("by_provider_and_tool", (q: any) => {
+          const range = q
+            .eq("providerId", args.providerId)
+            .eq("toolId", args.toolId);
+          return cursor === null
+            ? range
+            : range.gte("_creationTime", cursor.creationTime);
+        })
+    : ctx.db
+        .query("costPerTools")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .withIndex("by_provider", (q: any) => {
+          const range = q.eq("providerId", args.providerId);
+          return cursor === null
+            ? range
+            : range.gte("_creationTime", cursor.creationTime);
+        })
+  ).take(queryLimit);
+
+  const rowsWithLookahead =
+    cursor === null
+      ? candidateRows
+      : candidateRows.filter(
+          (row: Doc<"costPerTools">) =>
+            row._creationTime > cursor.creationTime || !seenIds.has(row._id),
+        );
+  const rows = rowsWithLookahead.slice(0, numItems);
+  const isDone = rowsWithLookahead.length <= numItems;
+
+  return {
+    rows,
+    continueCursor: isDone
+      ? null
+      : encodeRecomputeToolCostCursor(rows, cursor),
+    isDone,
+  };
+}
+
 /**
  * Idempotently recompute stored tool-cost rows for a provider (and optional
  * tool) from each row's stored `usage` and the CURRENT tool pricing. Used to
@@ -167,8 +301,9 @@ export const saveToolCost = internalMutationGeneric({
  * (e.g. a 10x-inflated per-credit rate). Re-running is a no-op once rows
  * already match current pricing, so it is safe to run repeatedly.
  *
- * Paginated: processes one page and returns a cursor so the caller can loop
- * over the full set. `dryRun` reports what would change without writing.
+ * Processes one bounded page and returns a component-safe cursor so the caller
+ * can loop over the full set. `dryRun` reports what would change without
+ * writing.
  *
  * @returns Per-page stats: rows scanned/changed, raw-cost amount before/after.
  */
@@ -180,24 +315,21 @@ export const recomputeToolCostsByProviderAndTool = mutationGeneric({
     numItems: v.optional(v.number()),
     dryRun: v.optional(v.boolean()),
   },
+  returns: v.object({
+    scanned: v.number(),
+    changed: v.number(),
+    skippedNoPricing: v.number(),
+    skippedError: v.number(),
+    amountBefore: v.number(),
+    amountAfter: v.number(),
+    dryRun: v.boolean(),
+    continueCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     const numItems = Math.max(1, Math.min(args.numItems ?? 200, 500));
     const dryRun = args.dryRun ?? false;
-
-    const page = await (args.toolId
-      ? ctx.db
-          .query("costPerTools")
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .withIndex("by_provider_and_tool", (q: any) =>
-            q.eq("providerId", args.providerId).eq("toolId", args.toolId),
-          )
-      : ctx.db
-          .query("costPerTools")
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .withIndex("by_provider", (q: any) =>
-            q.eq("providerId", args.providerId),
-          )
-    ).paginate({ cursor: args.cursor ?? null, numItems });
+    const page = await getRecomputeToolCostPage(ctx, args, numItems);
 
     let scanned = 0;
     let changed = 0;
@@ -205,18 +337,28 @@ export const recomputeToolCostsByProviderAndTool = mutationGeneric({
     let skippedError = 0;
     let amountBefore = 0;
     let amountAfter = 0;
+    const pricingCache = new Map<string, Doc<"toolsPricing"> | null>();
 
-    for (const row of page.page) {
+    for (const row of page.rows) {
       scanned += 1;
       amountBefore += row.cost.amount;
 
-      const pricing = await ctx.db
-        .query("toolsPricing")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .withIndex("by_provider_and_tool", (q: any) =>
-          q.eq("providerId", row.providerId).eq("toolId", row.toolId),
-        )
-        .first();
+      const pricingCacheKey = `${row.providerId}:${row.toolId}`;
+      const cachedPricing = pricingCache.get(pricingCacheKey);
+      let pricing: Doc<"toolsPricing"> | null;
+      if (cachedPricing !== undefined) {
+        pricing = cachedPricing;
+      } else {
+        pricing =
+          (await ctx.db
+            .query("toolsPricing")
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .withIndex("by_provider_and_tool", (q: any) =>
+              q.eq("providerId", row.providerId).eq("toolId", row.toolId),
+            )
+            .first()) ?? null;
+        pricingCache.set(pricingCacheKey, pricing);
+      }
 
       if (!pricing) {
         skippedNoPricing += 1;
@@ -237,7 +379,7 @@ export const recomputeToolCostsByProviderAndTool = mutationGeneric({
           markup,
         );
       } catch {
-        // Usage/pricing type mismatch for this row — leave it untouched.
+        // Usage/pricing type mismatch for this row: leave it untouched.
         skippedError += 1;
         amountAfter += row.cost.amount;
         continue;
@@ -264,7 +406,7 @@ export const recomputeToolCostsByProviderAndTool = mutationGeneric({
       amountBefore: Math.round(amountBefore * 1e8) / 1e8,
       amountAfter: Math.round(amountAfter * 1e8) / 1e8,
       dryRun,
-      continueCursor: page.isDone ? null : page.continueCursor,
+      continueCursor: page.continueCursor,
       isDone: page.isDone,
     };
   },
